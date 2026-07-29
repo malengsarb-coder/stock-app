@@ -33,6 +33,11 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
   const [npSell, setNpSell] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [editCustId, setEditCustId] = useState<string | null>(null)
+  const [editCustForm, setEditCustForm] = useState({ name: '', phone: '' })
+  const [editSupId, setEditSupId] = useState<string | null>(null)
+  const [editSupForm, setEditSupForm] = useState({ name: '', phone: '' })
+
   const load = useCallback(async () => {
     const [{ data: cust }, { data: sup }, { data: prod }, { data: links }] = await Promise.all([
       supabase.from('customers').select('*').order('name'),
@@ -134,6 +139,34 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
     setSupName('')
     setSupPhone('')
     setPending([])
+    load()
+  }
+
+  function startEditCustomer(c: Customer) {
+    setEditCustId(c.id)
+    setEditCustForm({ name: c.name, phone: c.phone ?? '' })
+  }
+  async function saveEditCustomer(id: string) {
+    if (!editCustForm.name.trim()) return
+    await supabase
+      .from('customers')
+      .update({ name: editCustForm.name.trim(), phone: editCustForm.phone.trim() })
+      .eq('id', id)
+    setEditCustId(null)
+    load()
+  }
+
+  function startEditSupplier(s: Supplier) {
+    setEditSupId(s.id)
+    setEditSupForm({ name: s.name, phone: s.phone ?? '' })
+  }
+  async function saveEditSupplier(id: string) {
+    if (!editSupForm.name.trim()) return
+    await supabase
+      .from('suppliers')
+      .update({ name: editSupForm.name.trim(), phone: editSupForm.phone.trim() })
+      .eq('id', id)
+    setEditSupId(null)
     load()
   }
 
@@ -312,15 +345,54 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
             <tr className="text-left text-sand-700 border-b border-sand-200">
               <th className="px-3 py-2 font-medium">ชื่อ</th>
               <th className="px-3 py-2 font-medium">เบอร์โทร</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
-            {customers.map((c) => (
-              <tr key={c.id} className="border-b border-sand-100 last:border-0">
-                <td className="px-3 py-2">{c.name}</td>
-                <td className="px-3 py-2">{c.phone}</td>
-              </tr>
-            ))}
+            {customers.map((c) =>
+              editCustId === c.id ? (
+                <tr key={c.id} className="border-b border-sand-100 last:border-0 bg-teal-50/40">
+                  <td className="px-3 py-2">
+                    <input
+                      value={editCustForm.name}
+                      onChange={(e) => setEditCustForm((f) => ({ ...f, name: e.target.value }))}
+                      className="w-full rounded-lg border border-sand-200 px-2 py-1 text-sm"
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      value={editCustForm.phone}
+                      onChange={(e) => setEditCustForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="w-full rounded-lg border border-sand-200 px-2 py-1 text-sm"
+                    />
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <button
+                      onClick={() => saveEditCustomer(c.id)}
+                      className="text-xs rounded-md bg-teal-600 text-white px-2 py-1 mr-1"
+                    >
+                      บันทึก
+                    </button>
+                    <button onClick={() => setEditCustId(null)} className="text-xs rounded-md border border-sand-200 px-2 py-1">
+                      ยกเลิก
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={c.id} className="border-b border-sand-100 last:border-0">
+                  <td className="px-3 py-2">{c.name || <span className="text-sand-700">(ไม่มีชื่อ)</span>}</td>
+                  <td className="px-3 py-2">{c.phone}</td>
+                  <td className="px-3 py-2">
+                    <button
+                      onClick={() => startEditCustomer(c)}
+                      className="text-xs rounded-md border border-sand-200 px-2 py-1"
+                    >
+                      แก้ไข
+                    </button>
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
@@ -333,18 +405,56 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
               <th className="px-3 py-2 font-medium">ชื่อ</th>
               <th className="px-3 py-2 font-medium">เบอร์โทร</th>
               <th className="px-3 py-2 font-medium">สินค้าที่ขายให้</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
-            {suppliers.map((s) => (
-              <tr key={s.id} className="border-b border-sand-100 last:border-0">
-                <td className="px-3 py-2">{s.name}</td>
-                <td className="px-3 py-2">{s.phone}</td>
-                <td className="px-3 py-2">
-                  {(supplierLinks[s.id] ?? []).map((l) => l.name).join(', ') || '-'}
-                </td>
-              </tr>
-            ))}
+            {suppliers.map((s) =>
+              editSupId === s.id ? (
+                <tr key={s.id} className="border-b border-sand-100 last:border-0 bg-teal-50/40">
+                  <td className="px-3 py-2">
+                    <input
+                      value={editSupForm.name}
+                      onChange={(e) => setEditSupForm((f) => ({ ...f, name: e.target.value }))}
+                      className="w-full rounded-lg border border-sand-200 px-2 py-1 text-sm"
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      value={editSupForm.phone}
+                      onChange={(e) => setEditSupForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="w-full rounded-lg border border-sand-200 px-2 py-1 text-sm"
+                    />
+                  </td>
+                  <td className="px-3 py-2 text-sand-700">{(supplierLinks[s.id] ?? []).map((l) => l.name).join(', ') || '-'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <button
+                      onClick={() => saveEditSupplier(s.id)}
+                      className="text-xs rounded-md bg-teal-600 text-white px-2 py-1 mr-1"
+                    >
+                      บันทึก
+                    </button>
+                    <button onClick={() => setEditSupId(null)} className="text-xs rounded-md border border-sand-200 px-2 py-1">
+                      ยกเลิก
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={s.id} className="border-b border-sand-100 last:border-0">
+                  <td className="px-3 py-2">{s.name || <span className="text-sand-700">(ไม่มีชื่อ)</span>}</td>
+                  <td className="px-3 py-2">{s.phone}</td>
+                  <td className="px-3 py-2">{(supplierLinks[s.id] ?? []).map((l) => l.name).join(', ') || '-'}</td>
+                  <td className="px-3 py-2">
+                    <button
+                      onClick={() => startEditSupplier(s)}
+                      className="text-xs rounded-md border border-sand-200 px-2 py-1"
+                    >
+                      แก้ไข
+                    </button>
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
