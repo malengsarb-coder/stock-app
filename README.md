@@ -1,85 +1,47 @@
-# ระบบรับ-จ่ายสต็อกสินค้า (Stock In/Out System)
+# แพกุ้งโชคศิริวัฒน์ฟาร์ม — ระบบจัดการสต็อก (v2)
 
-React + TypeScript + Tailwind + Supabase
+React + TypeScript + Tailwind + Supabase + lucide-react (ไอคอน)
 
-## 1. สร้าง Supabase Project
+โครงสร้างใหม่เป็นหน้าหลักแบบ Tile 5 ช่อง:
+- **สินค้า** — ดูสต็อกแยกตามหมวด (Browse อย่างเดียว, Admin เปิด/ปิดใช้งานได้)
+- **ซื้อขาย** — เลือกวันที่, ปุ่ม "ซื้อ" (จาก Supplier เฉพาะสินค้าที่ผูกไว้) และ "ขาย" (ให้ Customer เลือกสินค้าใดก็ได้) บันทึกได้หลายรายการต่อครั้ง, Admin แก้ไขรายการย้อนหลังได้
+- **การเงิน** — สรุปยอดค้างจ่าย Supplier / ค้างเก็บ Customer เลือกรายการที่จ่ายแล้วกดยืนยัน (มี popup ยืนยันซ้ำ)
+- **เพิ่มสินค้า** — Master สินค้า พร้อมแก้ไข/ปรับยอดคงเหลือ (เฉพาะ Admin, ไม่มีการเก็บประวัติการปรับยอด)
+- **เพิ่มผู้ซื้อ/ผู้ขาย** — เพิ่ม Customer (ชื่อ+เบอร์) หรือ Supplier (ชื่อ+เบอร์+ผูกสินค้าที่ขายให้พร้อมราคา, พิมพ์ชื่อสินค้าใหม่ = สร้างสินค้า/หมวดใหม่ให้อัตโนมัติ)
 
-1. ไปที่ https://supabase.com -> Sign in / Sign up -> **New project**
-2. ตั้งชื่อ Project, เลือก Region ใกล้ที่สุด (Southeast Asia - Singapore), ตั้งรหัสผ่าน Database
-   แล้วกด Create -- รอสัก 1-2 นาทีให้ Project พร้อม
-3. ไปที่เมนู **Project Settings -> API** จะเห็น
-   - **Project URL** (เช่น `https://xxxx.supabase.co`)
-   - **anon public** key
-   เก็บสองค่านี้ไว้ ใช้ในขั้นตอนถัดไป
+ไม่มีหน้า "ผู้ใช้งาน" แล้ว เพราะใช้งานคนเดียวเป็น Admin
 
-## 2. สร้างตารางฐานข้อมูล
+---
 
-1. ไปที่เมนู **SQL Editor** ในแดชบอร์ด
-2. เปิดไฟล์ `supabase/schema.sql` ในโปรเจกต์นี้ คัดลอกทั้งหมด แล้ววางรัน (Run)
-3. จะได้ตาราง: `profiles`, `products`, `suppliers`, `customers`,
-   `transactions`, `transaction_items`, `stock_adjustments` พร้อม Row Level
-   Security ตามสิทธิ์ Admin / Staff / Viewer
+## ถ้าคุณมี Supabase Project เดิมอยู่แล้ว (จากเวอร์ชันก่อนหน้า)
 
-## 3. สร้างผู้ใช้คนแรก (Admin)
+**อย่ารัน `supabase/schema.sql` ซ้ำ** ให้รัน **`supabase/migration_v2.sql`** แทน:
 
-1. ไปที่เมนู **Authentication -> Users -> Add user -> Create new user**
-   ใส่อีเมล/รหัสผ่านสำหรับตัวเอง (เลือก Auto Confirm User ให้ติ๊กถูก จะได้ไม่ต้องยืนยันอีเมล)
-2. เมื่อสร้างเสร็จ ระบบจะสร้างแถวใน `profiles` ให้อัตโนมัติ (role เริ่มต้น = staff)
-3. กลับไปที่ **SQL Editor** รันคำสั่งนี้ (แทน UUID ด้วย id ของ user ที่เพิ่งสร้าง
-   ดูได้จากหน้า Authentication -> Users):
+1. เปิด Supabase Dashboard ของโปรเจกต์เดิม → **SQL Editor**
+2. เปิดไฟล์ `supabase/migration_v2.sql` ในโปรเจกต์นี้ คัดลอกทั้งหมด วางแล้ว Run
+3. เท่านี้ฐานข้อมูลเดิมจะอัปเดตให้รองรับโครงสร้างใหม่ (ผูกสินค้ากับ Supplier, สถานะ Active ของ Supplier, สิทธิ์แก้ไขสินค้าเฉพาะ Admin) โดยข้อมูลเดิมไม่หาย
 
-   ```sql
-   update profiles set role = 'admin' where id = '<วาง UUID ตรงนี้>';
-   ```
+## ถ้าเริ่มโปรเจกต์ใหม่ตั้งแต่ต้น
 
-   ทำแบบนี้กับบัญชีที่ต้องการให้เป็น Admin (จัดการหน้า "ปรับยอด" และ "ผู้ใช้งาน" ได้)
-   ผู้ใช้คนอื่นที่สร้างทีหลังจะเป็น role `staff` โดยอัตโนมัติ -- Admin ปรับ role
-   ให้ใครก็ได้ภายหลังจากหน้า "ผู้ใช้งาน" ในเว็บแอป
+รัน `supabase/schema.sql` ทั้งไฟล์ใน SQL Editor (ดูขั้นตอนละเอียดในสคริปต์)
+แล้วสร้างผู้ใช้คนแรกที่ Authentication → Users จากนั้นตั้งเป็น admin ด้วย:
+```sql
+update profiles set role = 'admin' where id = '<UUID>';
+```
 
-## 4. ตั้งค่าโปรเจกต์นี้
+---
+
+## รันโปรเจกต์
 
 ```bash
 cp .env.example .env
 ```
-
-เปิดไฟล์ `.env` แล้วใส่ค่า Project URL และ anon key จากขั้นตอนที่ 1:
-
-```
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=xxxxxxxxxxxxxxxx
-```
-
-## 5. รันโปรเจกต์
-
+ใส่ค่า `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY` ของโปรเจกต์ Supabase ที่ใช้อยู่ แล้ว:
 ```bash
 npm install
 npm run dev
 ```
 
-เปิด http://localhost:5173 แล้วเข้าสู่ระบบด้วยบัญชีที่สร้างไว้ในขั้นตอนที่ 3
+## Deploy
 
-## 6. Deploy จริง
-
-สร้างไฟล์ production ด้วย `npm run build` จะได้โฟลเดอร์ `dist/`
-นำไป deploy กับ Vercel / Netlify / Cloudflare Pages ได้เลย (อย่าลืมตั้งค่า
-environment variable `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY`
-ในระบบ deploy ด้วย)
-
-## โครงสร้างหน้าในแอป
-
-- **หน้าหลัก** -- สรุปสินค้าคงเหลือแยกหมวด, ปุ่มรับเข้า/จ่ายออก (เลือกได้หลาย
-  รายการสินค้าต่อ 1 ครั้ง), คลิกชื่อสินค้า + เลือกวันที่ดู Supplier/Customer
-  ที่มีรายการวันนั้น
-- **หน้ารายการ** -- แยกซื้อเข้า/ขายออก จัดกลุ่มตาม Supplier/Customer พร้อมยอด
-  ค้างชำระ, เลือกรายการที่จะจ่ายแล้วกดยืนยัน (มี popup ยืนยันซ้ำก่อนตัดยอดจริง)
-- **ปรับยอด** *(Admin เท่านั้น)* -- ปรับยอดสต็อกเมื่อของจริงไม่ตรงกับระบบ
-- **ผู้ใช้งาน** *(Admin เท่านั้น)* -- กำหนด role ให้แต่ละบัญชี
-- **เพิ่มสินค้า/ผู้ซื้อ/ผู้ขาย** -- จัดการ Master data พร้อมสถานะ
-  Active/Inactive ต่อสินค้า
-
-## หมายเหตุด้านความปลอดภัย
-
-Row Level Security ที่ให้มาเป็นจุดเริ่มต้นที่เหมาะสม (อ่านได้ทุกคนที่ login,
-เขียนได้เฉพาะ staff/admin, หน้า Adjustment เฉพาะ admin) แนะนำให้ทบทวนอีกครั้ง
-ก่อนใช้งานจริงกับข้อมูลสำคัญ โดยเฉพาะถ้ามีจำนวนผู้ใช้เพิ่มขึ้นหรือมีข้อกำหนด
-เรื่องสิทธิ์ที่ละเอียดกว่านี้
+`npm run build` แล้วนำโฟลเดอร์ `dist/` ขึ้น Vercel/Netlify ได้เลย (ตั้ง Environment Variables สองตัวด้านบนในระบบ deploy ด้วย)

@@ -8,7 +8,6 @@ interface AuthContextValue {
   profile: Profile | null
   loading: boolean
   isAdmin: boolean
-  isStaffOrAdmin: boolean
   signOut: () => Promise<void>
 }
 
@@ -20,18 +19,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s)
-    })
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
     return () => sub.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
     let cancelled = false
-    async function loadProfile() {
+    async function load() {
       if (!session) {
         setProfile(null)
         setLoading(false)
@@ -40,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true)
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, role')
         .eq('id', session.user.id)
         .single()
       if (!cancelled) {
@@ -48,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       }
     }
-    loadProfile()
+    load()
     return () => {
       cancelled = true
     }
@@ -59,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     isAdmin: profile?.role === 'admin',
-    isStaffOrAdmin: profile?.role === 'admin' || profile?.role === 'staff',
     signOut: async () => {
       await supabase.auth.signOut()
     },

@@ -1,83 +1,45 @@
 import { useState } from 'react'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
-import Home from './pages/Home'
-import Transactions from './pages/Transactions'
-import MasterData from './pages/MasterData'
-import Adjustment from './pages/Adjustment'
-import Users from './pages/Users'
+import Home from './views/Home'
+import ProductsView from './views/ProductsView'
+import TradeView from './views/TradeView'
+import FinanceView from './views/FinanceView'
+import MasterProductView from './views/MasterProductView'
+import MasterPartnerView from './views/MasterPartnerView'
 
-type Tab = 'home' | 'tx' | 'adj' | 'users' | 'master'
-
-const TABS: { key: Tab; label: string; adminOnly?: boolean }[] = [
-  { key: 'home', label: 'หน้าหลัก' },
-  { key: 'tx', label: 'หน้ารายการ' },
-  { key: 'adj', label: 'ปรับยอด', adminOnly: true },
-  { key: 'users', label: 'ผู้ใช้งาน', adminOnly: true },
-  { key: 'master', label: 'เพิ่มสินค้า/ผู้ซื้อ/ผู้ขาย' },
-]
+export type View = 'home' | 'products' | 'trade' | 'finance' | 'master-product' | 'master-partner'
 
 export default function App() {
-  const { session, profile, loading, isAdmin, signOut } = useAuth()
-  const [tab, setTab] = useState<Tab>('home')
+  const { session, profile, loading, signOut } = useAuth()
+  const [view, setView] = useState<View>('home')
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-sand-700 text-sm">
-        กำลังโหลด...
-      </div>
-    )
+    return <div className="min-h-screen flex items-center justify-center text-sand-700 text-sm">กำลังโหลด...</div>
   }
 
   if (!session) return <Login />
 
-  const visibleTabs = TABS.filter((t) => !t.adminOnly || isAdmin)
-  const activeTab = visibleTabs.some((t) => t.key === tab) ? tab : 'home'
-
   return (
     <div className="min-h-screen">
-      <header className="border-b border-sand-200 bg-white">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-pond-600 font-medium">
-              ระบบรับ-จ่ายสต็อกสินค้า
-            </p>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-sand-700">
-            <span>
-              {profile?.full_name} ({profile?.role})
-            </span>
-            <button onClick={() => signOut()} className="text-pond-600 font-medium">
-              ออกจากระบบ
-            </button>
-          </div>
+      <div className="max-w-2xl mx-auto px-4 pt-3 flex justify-end">
+        <div className="flex items-center gap-3 text-xs text-sand-700">
+          <span>
+            {profile?.full_name} ({profile?.role})
+          </span>
+          <button onClick={() => signOut()} className="text-teal-800 font-medium">
+            ออกจากระบบ
+          </button>
         </div>
-      </header>
+      </div>
 
-      <nav className="max-w-5xl mx-auto px-4 pt-4">
-        <div className="flex gap-1 border-b border-sand-200 overflow-x-auto">
-          {visibleTabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 ${
-                activeTab === t.key
-                  ? 'border-pond-600 text-sand-900 font-medium'
-                  : 'border-transparent text-sand-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        {activeTab === 'home' && <Home />}
-        {activeTab === 'tx' && <Transactions />}
-        {activeTab === 'adj' && isAdmin && <Adjustment />}
-        {activeTab === 'users' && isAdmin && <Users />}
-        {activeTab === 'master' && <MasterData />}
+      <main className="px-4 py-6">
+        {view === 'home' && <Home onNavigate={setView} />}
+        {view === 'products' && <ProductsView onBack={() => setView('home')} />}
+        {view === 'trade' && <TradeView onBack={() => setView('home')} />}
+        {view === 'finance' && <FinanceView onBack={() => setView('home')} />}
+        {view === 'master-product' && <MasterProductView onBack={() => setView('home')} />}
+        {view === 'master-partner' && <MasterPartnerView onBack={() => setView('home')} />}
       </main>
     </div>
   )

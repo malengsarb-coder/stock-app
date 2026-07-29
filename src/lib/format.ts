@@ -3,7 +3,6 @@ export function fmtMoney(n: number): string {
 }
 
 export function fmtDateShort(iso: string): string {
-  // iso: YYYY-MM-DD -> DD/MM/YYYY
   const [y, m, d] = iso.split('-')
   return `${d}/${m}/${y}`
 }

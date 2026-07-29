@@ -2,31 +2,34 @@
 
 @theme {
   --font-sans: "Noto Sans Thai", "Inter", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Pond teal - primary */
-  --color-pond-50: #eaf5f1;
-  --color-pond-100: #cfe9df;
-  --color-pond-500: #0f6e56;
-  --color-pond-600: #0b5d47;
-  --color-pond-700: #084a39;
-  --color-pond-900: #052e24;
-
-  /* Grain amber - accent */
-  --color-grain-50: #faf1e2;
-  --color-grain-100: #f2ddb4;
-  --color-grain-500: #a8641f;
-  --color-grain-600: #8a5119;
-
-  /* Warm neutrals */
+  /* Neutrals */
   --color-sand-50: #faf9f5;
   --color-sand-100: #f2efe7;
   --color-sand-200: #e6e1d3;
   --color-sand-700: #55503f;
   --color-sand-900: #262319;
 
-  --color-owe-50: #fdf1e0;
-  --color-owe-500: #b5680f;
+  /* Pastel accent ramps: 50 = tile/card tint, 600 = icon on white, 800 = text on tint */
+  --color-teal-50: #e1f5ee;
+  --color-teal-600: #0f6e56;
+  --color-teal-800: #04342c;
+
+  --color-amber-50: #faeeda;
+  --color-amber-600: #a8641f;
+  --color-amber-800: #4a2c06;
+
+  --color-coral-50: #faece7;
+  --color-coral-600: #993c1d;
+  --color-coral-800: #4a1b0c;
+
+  --color-purple-50: #eeedfe;
+  --color-purple-600: #534ab7;
+  --color-purple-800: #26215c;
+
+  --color-pink-50: #fbeaf0;
+  --color-pink-600: #993556;
+  --color-pink-800: #5c1f35;
 }
 
 html, body, #root {
@@ -41,5 +44,4 @@ body {
 
 .tabular {
   font-variant-numeric: tabular-nums;
-  font-family: var(--font-mono);
 }
