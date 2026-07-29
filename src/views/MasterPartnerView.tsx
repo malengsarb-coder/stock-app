@@ -170,6 +170,18 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
     load()
   }
 
+  async function deleteCustomer(c: Customer) {
+    if (!window.confirm(`ลบผู้ซื้อ "${c.name || '(ไม่มีชื่อ)'}" ใช่ไหม?`)) return
+    await supabase.from('customers').delete().eq('id', c.id)
+    load()
+  }
+
+  async function deleteSupplier(s: Supplier) {
+    if (!window.confirm(`ลบผู้ขาย "${s.name || '(ไม่มีชื่อ)'}" ใช่ไหม? (สินค้าที่ผูกไว้กับผู้ขายรายนี้จะถูกลบด้วย)`)) return
+    await supabase.from('suppliers').delete().eq('id', s.id)
+    load()
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <BackButton onClick={onBack} />
@@ -382,12 +394,18 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
                 <tr key={c.id} className="border-b border-sand-100 last:border-0">
                   <td className="px-3 py-2">{c.name || <span className="text-sand-700">(ไม่มีชื่อ)</span>}</td>
                   <td className="px-3 py-2">{c.phone}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <button
                       onClick={() => startEditCustomer(c)}
-                      className="text-xs rounded-md border border-sand-200 px-2 py-1"
+                      className="text-xs rounded-md border border-sand-200 px-2 py-1 mr-1"
                     >
                       แก้ไข
+                    </button>
+                    <button
+                      onClick={() => deleteCustomer(c)}
+                      className="text-xs rounded-md border border-sand-200 px-2 py-1 text-red-600"
+                    >
+                      ลบ
                     </button>
                   </td>
                 </tr>
@@ -444,12 +462,18 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
                   <td className="px-3 py-2">{s.name || <span className="text-sand-700">(ไม่มีชื่อ)</span>}</td>
                   <td className="px-3 py-2">{s.phone}</td>
                   <td className="px-3 py-2">{(supplierLinks[s.id] ?? []).map((l) => l.name).join(', ') || '-'}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <button
                       onClick={() => startEditSupplier(s)}
-                      className="text-xs rounded-md border border-sand-200 px-2 py-1"
+                      className="text-xs rounded-md border border-sand-200 px-2 py-1 mr-1"
                     >
                       แก้ไข
+                    </button>
+                    <button
+                      onClick={() => deleteSupplier(s)}
+                      className="text-xs rounded-md border border-sand-200 px-2 py-1 text-red-600"
+                    >
+                      ลบ
                     </button>
                   </td>
                 </tr>
