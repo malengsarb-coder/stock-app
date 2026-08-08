@@ -148,10 +148,7 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
   }
   async function saveEditCustomer(id: string) {
     if (!editCustForm.name.trim()) return
-    await supabase
-      .from('customers')
-      .update({ name: editCustForm.name.trim(), phone: editCustForm.phone.trim() })
-      .eq('id', id)
+    await supabase.from('customers').update({ name: editCustForm.name.trim(), phone: editCustForm.phone.trim() }).eq('id', id)
     setEditCustId(null)
     load()
   }
@@ -162,10 +159,7 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
   }
   async function saveEditSupplier(id: string) {
     if (!editSupForm.name.trim()) return
-    await supabase
-      .from('suppliers')
-      .update({ name: editSupForm.name.trim(), phone: editSupForm.phone.trim() })
-      .eq('id', id)
+    await supabase.from('suppliers').update({ name: editSupForm.name.trim(), phone: editSupForm.phone.trim() }).eq('id', id)
     setEditSupId(null)
     load()
   }
@@ -175,7 +169,6 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
     await supabase.from('customers').delete().eq('id', c.id)
     load()
   }
-
   async function deleteSupplier(s: Supplier) {
     if (!window.confirm(`ลบผู้ขาย "${s.name || '(ไม่มีชื่อ)'}" ใช่ไหม? (สินค้าที่ผูกไว้กับผู้ขายรายนี้จะถูกลบด้วย)`)) return
     await supabase.from('suppliers').delete().eq('id', s.id)
@@ -379,10 +372,7 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
                     />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <button
-                      onClick={() => saveEditCustomer(c.id)}
-                      className="text-xs rounded-md bg-teal-600 text-white px-2 py-1 mr-1"
-                    >
+                    <button onClick={() => saveEditCustomer(c.id)} className="text-xs rounded-md bg-teal-600 text-white px-2 py-1 mr-1">
                       บันทึก
                     </button>
                     <button onClick={() => setEditCustId(null)} className="text-xs rounded-md border border-sand-200 px-2 py-1">
@@ -395,16 +385,10 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
                   <td className="px-3 py-2">{c.name || <span className="text-sand-700">(ไม่มีชื่อ)</span>}</td>
                   <td className="px-3 py-2">{c.phone}</td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <button
-                      onClick={() => startEditCustomer(c)}
-                      className="text-xs rounded-md border border-sand-200 px-2 py-1 mr-1"
-                    >
+                    <button onClick={() => startEditCustomer(c)} className="text-xs rounded-md border border-sand-200 px-2 py-1 mr-1">
                       แก้ไข
                     </button>
-                    <button
-                      onClick={() => deleteCustomer(c)}
-                      className="text-xs rounded-md border border-sand-200 px-2 py-1 text-red-600"
-                    >
+                    <button onClick={() => deleteCustomer(c)} className="text-xs rounded-md border border-sand-200 px-2 py-1 text-red-600">
                       ลบ
                     </button>
                   </td>
@@ -446,10 +430,7 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
                   </td>
                   <td className="px-3 py-2 text-sand-700">{(supplierLinks[s.id] ?? []).map((l) => l.name).join(', ') || '-'}</td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <button
-                      onClick={() => saveEditSupplier(s.id)}
-                      className="text-xs rounded-md bg-teal-600 text-white px-2 py-1 mr-1"
-                    >
+                    <button onClick={() => saveEditSupplier(s.id)} className="text-xs rounded-md bg-teal-600 text-white px-2 py-1 mr-1">
                       บันทึก
                     </button>
                     <button onClick={() => setEditSupId(null)} className="text-xs rounded-md border border-sand-200 px-2 py-1">
@@ -463,16 +444,10 @@ export default function MasterPartnerView({ onBack }: { onBack: () => void }) {
                   <td className="px-3 py-2">{s.phone}</td>
                   <td className="px-3 py-2">{(supplierLinks[s.id] ?? []).map((l) => l.name).join(', ') || '-'}</td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <button
-                      onClick={() => startEditSupplier(s)}
-                      className="text-xs rounded-md border border-sand-200 px-2 py-1 mr-1"
-                    >
+                    <button onClick={() => startEditSupplier(s)} className="text-xs rounded-md border border-sand-200 px-2 py-1 mr-1">
                       แก้ไข
                     </button>
-                    <button
-                      onClick={() => deleteSupplier(s)}
-                      className="text-xs rounded-md border border-sand-200 px-2 py-1 text-red-600"
-                    >
+                    <button onClick={() => deleteSupplier(s)} className="text-xs rounded-md border border-sand-200 px-2 py-1 text-red-600">
                       ลบ
                     </button>
                   </td>

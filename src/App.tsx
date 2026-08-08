@@ -3,22 +3,44 @@ import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Home from './views/Home'
 import ProductsView from './views/ProductsView'
-import TradeView from './views/TradeView'
-import FinanceView from './views/FinanceView'
+import TradeHistoryView from './views/TradeHistoryView'
+import BuyView from './views/BuyView'
+import SellView from './views/SellView'
+import ReceivableView from './views/ReceivableView'
+import PayableView from './views/PayableView'
 import MasterProductView from './views/MasterProductView'
 import MasterPartnerView from './views/MasterPartnerView'
 
-export type View = 'home' | 'products' | 'trade' | 'finance' | 'master-product' | 'master-partner'
+export type View =
+  | 'home'
+  | 'products'
+  | 'history'
+  | 'buy'
+  | 'sell'
+  | 'receivable'
+  | 'payable'
+  | 'master-product'
+  | 'master-partner'
 
 export default function App() {
   const { session, profile, loading, signOut } = useAuth()
   const [view, setView] = useState<View>('home')
+  const [focusSupplierId, setFocusSupplierId] = useState<string | null>(null)
+  const [focusCustomerId, setFocusCustomerId] = useState<string | null>(null)
+  const [focusCustomerName, setFocusCustomerName] = useState<string | null>(null)
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-sand-700 text-sm">กำลังโหลด...</div>
   }
 
   if (!session) return <Login />
+
+  function goHome() {
+    setView('home')
+    setFocusSupplierId(null)
+    setFocusCustomerId(null)
+    setFocusCustomerName(null)
+  }
 
   return (
     <div className="min-h-screen">
@@ -35,11 +57,40 @@ export default function App() {
 
       <main className="px-4 py-6">
         {view === 'home' && <Home onNavigate={setView} />}
-        {view === 'products' && <ProductsView onBack={() => setView('home')} />}
-        {view === 'trade' && <TradeView onBack={() => setView('home')} />}
-        {view === 'finance' && <FinanceView onBack={() => setView('home')} />}
-        {view === 'master-product' && <MasterProductView onBack={() => setView('home')} />}
-        {view === 'master-partner' && <MasterPartnerView onBack={() => setView('home')} />}
+        {view === 'products' && <ProductsView onBack={goHome} />}
+        {view === 'history' && <TradeHistoryView onBack={goHome} />}
+        {view === 'buy' && (
+          <BuyView
+            onBack={goHome}
+            onGotoPayable={(supplierId) => {
+              setFocusSupplierId(supplierId)
+              setView('payable')
+            }}
+          />
+        )}
+        {view === 'sell' && (
+          <SellView
+            onBack={goHome}
+            onGotoReceivable={(customerId, name) => {
+              setFocusCustomerId(customerId)
+              setFocusCustomerName(name)
+              setView('receivable')
+            }}
+          />
+        )}
+        {view === 'receivable' && (
+          <ReceivableView
+            onBack={goHome}
+            onGotoHistory={() => setView('history')}
+            focusCustomerId={focusCustomerId}
+            focusCustomerName={focusCustomerName}
+          />
+        )}
+        {view === 'payable' && (
+          <PayableView onBack={goHome} onGotoHistory={() => setView('history')} focusSupplierId={focusSupplierId} />
+        )}
+        {view === 'master-product' && <MasterProductView onBack={goHome} />}
+        {view === 'master-partner' && <MasterPartnerView onBack={goHome} />}
       </main>
     </div>
   )

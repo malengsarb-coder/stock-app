@@ -19,10 +19,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-sand-50 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white border border-sand-200 rounded-2xl p-8 shadow-sm"
-      >
+      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white border border-sand-200 rounded-2xl p-8 shadow-sm">
         <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center mb-4">
           <Anchor size={20} className="text-teal-800" />
         </div>

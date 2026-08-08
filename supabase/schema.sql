@@ -1,13 +1,10 @@
 -- ============================================================
--- Stock In/Out System v2 - Full database schema
+-- Stock In/Out System v3 - Full database schema
 -- Run this once in Supabase Dashboard -> SQL Editor -> New query
--- (For an EXISTING project that already ran v1 schema.sql, use
---  migration_v2.sql instead -- do not re-run this file.)
+-- (For an EXISTING v2 project, use migration_v3.sql instead.)
 -- ============================================================
 
 create extension if not exists "pgcrypto";
-
--- ---------- Tables ----------
 
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -44,7 +41,6 @@ create table if not exists customers (
   created_at timestamptz not null default now()
 );
 
--- Which products a supplier sells us, and at what price (can differ per supplier)
 create table if not exists supplier_products (
   id uuid primary key default gen_random_uuid(),
   supplier_id uuid not null references suppliers(id) on delete cascade,
@@ -54,12 +50,18 @@ create table if not exists supplier_products (
   unique (supplier_id, product_id)
 );
 
+-- A "bill": one purchase (type=in) or one sale (type=out) event with multiple line items.
+-- For purchases, invoice_no/paid/paid_amount track supplier bill-level payment (with discount support).
 create table if not exists transactions (
   id uuid primary key default gen_random_uuid(),
-  type text not null check (type in ('in','out')), -- in = ซื้อจาก supplier, out = ขายให้ customer
-  partner_id uuid, -- supplier id (type=in) or customer id (type=out); null when a free-typed name was used
+  type text not null check (type in ('in','out')),
+  partner_id uuid,
   partner_name text not null,
+  invoice_no text,
   transaction_date date not null default current_date,
+  paid boolean not null default false,
+  paid_amount numeric(12,2),
+  paid_at timestamptz,
   created_by uuid references profiles(id),
   created_at timestamptz not null default now()
 );
@@ -71,8 +73,17 @@ create table if not exists transaction_items (
   product_name text not null,
   qty numeric(12,2) not null,
   unit_price numeric(12,2) not null,
-  paid boolean not null default false,
-  paid_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+-- Customer receivable ledger: sales (from transactions type=out) add to balance,
+-- rows here (arbitrary amounts, not tied to a specific sale) subtract from it.
+create table if not exists customer_payments (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid not null references customers(id) on delete cascade,
+  amount numeric(12,2) not null,
+  payment_date date not null default current_date,
+  created_by uuid references profiles(id),
   created_at timestamptz not null default now()
 );
 
@@ -116,14 +127,12 @@ alter table customers enable row level security;
 alter table supplier_products enable row level security;
 alter table transactions enable row level security;
 alter table transaction_items enable row level security;
+alter table customer_payments enable row level security;
 
 create policy "profiles_select_all" on profiles for select to authenticated using (true);
-create policy "profiles_update_self_name" on profiles for update to authenticated
-  using (id = auth.uid()) with check (id = auth.uid());
-create policy "profiles_update_admin" on profiles for update to authenticated
-  using (is_admin()) with check (true);
+create policy "profiles_update_self_name" on profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+create policy "profiles_update_admin" on profiles for update to authenticated using (is_admin()) with check (true);
 
--- products: everyone signed in can read and add; only ADMIN can edit/adjust existing rows
 create policy "products_select" on products for select to authenticated using (true);
 create policy "products_insert" on products for insert to authenticated with check (is_staff_or_admin());
 create policy "products_update_admin" on products for update to authenticated using (is_admin());
@@ -131,10 +140,12 @@ create policy "products_update_admin" on products for update to authenticated us
 create policy "suppliers_select" on suppliers for select to authenticated using (true);
 create policy "suppliers_write" on suppliers for insert to authenticated with check (is_staff_or_admin());
 create policy "suppliers_update" on suppliers for update to authenticated using (is_staff_or_admin());
+create policy "suppliers_delete" on suppliers for delete to authenticated using (is_staff_or_admin());
 
 create policy "customers_select" on customers for select to authenticated using (true);
 create policy "customers_write" on customers for insert to authenticated with check (is_staff_or_admin());
 create policy "customers_update" on customers for update to authenticated using (is_staff_or_admin());
+create policy "customers_delete" on customers for delete to authenticated using (is_staff_or_admin());
 
 create policy "supplier_products_select" on supplier_products for select to authenticated using (true);
 create policy "supplier_products_write" on supplier_products for insert to authenticated with check (is_staff_or_admin());
@@ -143,14 +154,16 @@ create policy "supplier_products_delete" on supplier_products for delete to auth
 
 create policy "transactions_select" on transactions for select to authenticated using (true);
 create policy "transactions_write" on transactions for insert to authenticated with check (is_staff_or_admin());
+create policy "transactions_update" on transactions for update to authenticated using (is_staff_or_admin());
 
 create policy "transaction_items_select" on transaction_items for select to authenticated using (true);
 create policy "transaction_items_write" on transaction_items for insert to authenticated with check (is_staff_or_admin());
-create policy "transaction_items_update" on transaction_items for update to authenticated using (is_staff_or_admin());
+
+create policy "customer_payments_select" on customer_payments for select to authenticated using (true);
+create policy "customer_payments_write" on customer_payments for insert to authenticated with check (is_staff_or_admin());
 
 -- ============================================================
 -- After running this file:
 -- 1. Authentication -> Users -> create your login (Auto Confirm on).
--- 2. SQL Editor:
---      update profiles set role = 'admin' where id = '<the new user''s UUID>';
+-- 2. SQL Editor:  update profiles set role = 'admin' where id = '<UUID>';
 -- ============================================================

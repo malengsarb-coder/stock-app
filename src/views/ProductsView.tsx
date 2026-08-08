@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, Fragment } from 'react'
+import { Sliders, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import type { Product } from '../lib/types'
@@ -8,6 +9,8 @@ export default function ProductsView({ onBack }: { onBack: () => void }) {
   const { isAdmin } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editQty, setEditQty] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -23,6 +26,19 @@ export default function ProductsView({ onBack }: { onBack: () => void }) {
   async function toggleActive(p: Product) {
     if (!isAdmin) return
     await supabase.from('products').update({ active: !p.active }).eq('id', p.id)
+    load()
+  }
+
+  function startEdit(p: Product) {
+    setEditingId(p.id)
+    setEditQty(String(p.qty))
+  }
+
+  async function saveEdit(p: Product) {
+    const newQty = parseFloat(editQty)
+    if (Number.isNaN(newQty)) return
+    await supabase.from('products').update({ qty: newQty }).eq('id', p.id)
+    setEditingId(null)
     load()
   }
 
@@ -43,9 +59,9 @@ export default function ProductsView({ onBack }: { onBack: () => void }) {
                   <tr className="text-left text-sand-700 border-b border-sand-200">
                     <th className="px-3 py-2 font-medium">ชื่อ</th>
                     <th className="px-3 py-2 font-medium">หน่วย</th>
-                    <th className="px-3 py-2 font-medium">จำนวน</th>
+                    <th className="px-3 py-2 font-medium">คงเหลือ</th>
                     <th className="px-3 py-2 font-medium">สถานะ</th>
-                    {isAdmin && <th className="px-3 py-2"></th>}
+                    <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -55,7 +71,19 @@ export default function ProductsView({ onBack }: { onBack: () => void }) {
                       <tr key={p.id} className={`border-b border-sand-100 last:border-0 ${!p.active ? 'opacity-50' : ''}`}>
                         <td className="px-3 py-2">{p.name}</td>
                         <td className="px-3 py-2">{p.unit}</td>
-                        <td className="px-3 py-2 tabular">{p.qty}</td>
+                        <td className="px-3 py-2 tabular">
+                          {editingId === p.id ? (
+                            <input
+                              type="number"
+                              value={editQty}
+                              onChange={(e) => setEditQty(e.target.value)}
+                              className="w-20 rounded-lg border border-sand-200 px-2 py-1 text-sm"
+                              autoFocus
+                            />
+                          ) : (
+                            p.qty
+                          )}
+                        </td>
                         <td className="px-3 py-2">
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full ${
@@ -65,16 +93,36 @@ export default function ProductsView({ onBack }: { onBack: () => void }) {
                             {p.active ? 'Active' : 'Inactive'}
                           </span>
                         </td>
-                        {isAdmin && (
-                          <td className="px-3 py-2">
-                            <button
-                              onClick={() => toggleActive(p)}
-                              className="text-xs rounded-md border border-sand-200 px-2 py-1"
-                            >
-                              {p.active ? 'ปิดการใช้งาน' : 'เปิดใช้งาน'}
-                            </button>
-                          </td>
-                        )}
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {isAdmin &&
+                            (editingId === p.id ? (
+                              <>
+                                <button onClick={() => saveEdit(p)} className="p-1 text-teal-700" aria-label="บันทึก">
+                                  <Check size={16} />
+                                </button>
+                                <button onClick={() => setEditingId(null)} className="p-1 text-sand-700" aria-label="ยกเลิก">
+                                  <X size={16} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => startEdit(p)}
+                                  className="p-1 text-sand-700 mr-1"
+                                  aria-label="ปรับยอด"
+                                  title="ปรับยอด"
+                                >
+                                  <Sliders size={16} />
+                                </button>
+                                <button
+                                  onClick={() => toggleActive(p)}
+                                  className="text-xs rounded-md border border-sand-200 px-2 py-1"
+                                >
+                                  {p.active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
+                                </button>
+                              </>
+                            ))}
+                        </td>
                       </tr>
                     ))}
                 </tbody>

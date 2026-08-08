@@ -3,14 +3,12 @@
 @theme {
   --font-sans: "Noto Sans Thai", "Inter", system-ui, sans-serif;
 
-  /* Neutrals */
   --color-sand-50: #faf9f5;
   --color-sand-100: #f2efe7;
   --color-sand-200: #e6e1d3;
   --color-sand-700: #55503f;
   --color-sand-900: #262319;
 
-  /* Pastel accent ramps: 50 = tile/card tint, 600 = icon on white, 800 = text on tint */
   --color-teal-50: #e1f5ee;
   --color-teal-600: #0f6e56;
   --color-teal-800: #04342c;
@@ -30,18 +28,12 @@
   --color-pink-50: #fbeaf0;
   --color-pink-600: #993556;
   --color-pink-800: #5c1f35;
+
+  --color-slate-50: #f1efe8;
+  --color-slate-600: #5f5e5a;
+  --color-slate-800: #2c2c2a;
 }
 
-html, body, #root {
-  height: 100%;
-}
-
-body {
-  background-color: var(--color-sand-50);
-  color: var(--color-sand-900);
-  font-family: var(--font-sans);
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
-}
+html, body, #root { height: 100%; }
+body { background-color: var(--color-sand-50); color: var(--color-sand-900); font-family: var(--font-sans); }
+.tabular { font-variant-numeric: tabular-nums; }
